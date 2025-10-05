@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
-import MoviesTable from "./MoviesTable";
-import AnimatedBackground from "./AnimatedBackground";
-import PrivacyPolicy from "./PrivacyPolicy";
-import Breadcrumb from "./Breadcrumb";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { updateMetaTags, getPageMetadata } from "./utils/metaTags";
+
+// Lazy load components for code splitting
+const MoviesTable = lazy(() => import("./MoviesTable"));
+const AnimatedBackground = lazy(() => import("./AnimatedBackground"));
+const PrivacyPolicy = lazy(() => import("./PrivacyPolicy"));
+const Breadcrumb = lazy(() => import("./Breadcrumb"));
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -28,11 +30,20 @@ export default function App() {
     updateMetaTags(metadata);
   }, [currentPage]);
 
+  // Loading component
+  const LoadingFallback = () => (
+    <div className="flex items-center justify-center p-8">
+      <div className="w-8 h-8 rounded-full border-4 border-gray-300 border-t-blue-500 animate-spin"></div>
+    </div>
+  );
+
   return (
     <div className={`relative flex flex-col min-h-screen w-full transition-colors duration-300 ${
       darkMode ? 'dark bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
     }`}>
-      <AnimatedBackground />
+      <Suspense fallback={<div className="h-screen w-full bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800" />}>
+        <AnimatedBackground />
+      </Suspense>
 
       {/* Navigation */}
       <nav className="z-10 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm sticky top-0">
@@ -61,7 +72,9 @@ export default function App() {
       </nav>
 
       {/* Breadcrumb Navigation */}
-      <Breadcrumb currentPage={currentPage} onNavigate={setCurrentPage} />
+      <Suspense fallback={<LoadingFallback />}>
+        <Breadcrumb currentPage={currentPage} onNavigate={setCurrentPage} />
+      </Suspense>
 
       {currentPage === 'home' ? (
         <>
@@ -91,7 +104,9 @@ export default function App() {
 
           {/* Main Content */}
           <main className="z-10 w-full max-w-6xl mx-auto px-4 mb-12">
-            <MoviesTable />
+            <Suspense fallback={<LoadingFallback />}>
+              <MoviesTable />
+            </Suspense>
           </main>
 
           {/* Popular Platforms Section */}
@@ -169,7 +184,9 @@ export default function App() {
       ) : (
         /* Privacy Policy Page */
         <section className="z-10 w-full max-w-4xl mx-auto px-4 py-12">
-          <PrivacyPolicy />
+          <Suspense fallback={<LoadingFallback />}>
+            <PrivacyPolicy />
+          </Suspense>
         </section>
       )}
 
