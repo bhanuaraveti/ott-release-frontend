@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OG Image Generator - TeluguMoviesOTT</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    canvas {
+      border: 2px solid #ccc;
+      display: block;
+      margin: 20px auto;
+      background: white;
+    }
+    button {
+      display: block;
+      margin: 10px auto;
+      padding: 15px 30px;
+      background: #3B82F6;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #2563EB;
+    }
+    .instructions {
+      max-width: 800px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="instructions">
+    <h1>TeluguMoviesOTT - OG Image Generator</h1>
+    <p>This tool generates a social media preview image (1200x630px) for Facebook and Twitter.</p>
+    <ol>
+      <li>Click "Generate Image" below</li>
+      <li>Right-click the generated image</li>
+      <li>Select "Save Image As..."</li>
+      <li>Save as <code>og-image.png</code> in the <code>public</code> folder</li>
+    </ol>
+  </div>
+
+  <canvas id="ogCanvas" width="1200" height="630"></canvas>
+  <button onclick="generateImage()">Generate OG Image</button>
+  <button onclick="downloadImage()">Download Image</button>
+
+  <script>
+    function generateImage() {
+      const canvas = document.getElementById('ogCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // Gradient background
+      const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
+      gradient.addColorStop(0, '#3B82F6');
+      gradient.addColorStop(0.5, '#8B5CF6');
+      gradient.addColorStop(1, '#EC4899');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 1200, 630);
+
+      // Semi-transparent overlay
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.fillRect(0, 0, 1200, 630);
+
+      // Title
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 72px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('TeluguMoviesOTT', 600, 200);
+
+      // Subtitle
+      ctx.font = '48px Arial';
+      ctx.fillText('Latest Telugu Movie OTT Releases', 600, 280);
+
+      // Stats
+      ctx.font = 'bold 36px Arial';
+      ctx.fillText('800+ Movies  |  15+ Platforms  |  Daily Updates', 600, 380);
+
+      // Platform names
+      ctx.font = '28px Arial';
+      ctx.fillStyle = '#E0E0E0';
+      ctx.fillText('Netflix • Prime Video • Hotstar • Aha • Zee5 • Sony LIV', 600, 480);
+
+      // Footer
+      ctx.font = 'italic 24px Arial';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText('Your Complete Guide to Telugu Cinema Streaming', 600, 560);
+
+      alert('Image generated! You can now right-click to save it or click "Download Image".');
+    }
+
+    function downloadImage() {
+      const canvas = document.getElementById('ogCanvas');
+      const link = document.createElement('a');
+      link.download = 'og-image.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Generate on page load
+    window.onload = generateImage;
+  </script>
+</body>
+</html>

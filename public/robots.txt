@@ -1,10 +1,6 @@
+# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
 
-User-agent: Googlebot
-Allow: /
-
-User-agent: AdsBot-Google
-Allow: /
-
-Sitemap: https://telugumoviesott.onrender.com/sitemap.xml
+# Sitemap (served from backend with dynamic lastmod date)
+Sitemap: https://ott-release-backend.onrender.com/sitemap.xml

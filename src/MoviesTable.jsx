@@ -1,46 +1,98 @@
 import { useEffect, useState } from "react";
+import { updateMetaTags, getPageMetadata } from "./utils/metaTags";
 
-const API_URL = "https://ott-release-backend.onrender.com/movies";
+// Use environment variable for API URL, fallback to production URL
+const API_URL = import.meta.env.VITE_API_URL || "https://ott-release-backend.onrender.com/movies";
 
 // Enhanced helper function to normalize platform names
 const normalizePlatformName = (name) => {
   if (!name) return "";
-  
+
   // Trim the name and convert to consistent case for comparison
   const trimmedName = name.trim();
-  
+
   // Amazon/Prime Video variations
   if (trimmedName.includes("Prime") || trimmedName.includes("Amazon")) {
     return trimmedName.includes("Rent") ? "Prime Video (Rent)" : "Prime Video";
   }
-  
+
   // Aha Video variations
   if (trimmedName.includes("Aha")) {
     return "Aha";
   }
-  
+
   // Hungama variations
   if (trimmedName.includes("Hungama")) {
     return "Hungama";
   }
-  
+
   // Jiocinema/Hotstar variations
   if (trimmedName.includes("Jio")) {
     return "Hotstar";
   }
-  
+
   // Sony LIV variations
   if (trimmedName.toLowerCase().includes("sony")) {
     return "Sony LIV";
   }
-  
+
   // ZEE5 variations
   if (trimmedName.toLowerCase().includes("zee")) {
     return "ZEE5";
   }
-  
+
   // Return the trimmed name for other platforms
   return trimmedName;
+};
+
+// Function to update MovieList Schema dynamically
+const updateMovieListSchema = (movies) => {
+  // Remove existing schema if present
+  const existingSchema = document.getElementById('movie-list-schema');
+  if (existingSchema) {
+    existingSchema.remove();
+  }
+
+  // Create ItemList schema with first 100 movies (to avoid too large schema)
+  const moviesToInclude = movies.slice(0, 100);
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Telugu Movies OTT Release Dates",
+    "description": "Complete list of Telugu movies available on OTT platforms",
+    "numberOfItems": movies.length,
+    "itemListElement": moviesToInclude.map((movie, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "Movie",
+        "name": movie.name,
+        "datePublished": movie.available_on,
+        "genre": movie.type,
+        ...(movie.imdb_rating && { "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": movie.imdb_rating,
+          "bestRating": "10"
+        }}),
+        "offers": {
+          "@type": "Offer",
+          "availability": "https://schema.org/InStock",
+          "availableAtOrFrom": {
+            "@type": "Organization",
+            "name": movie.platform
+          }
+        }
+      }
+    }))
+  };
+
+  // Add schema to document head
+  const script = document.createElement('script');
+  script.id = 'movie-list-schema';
+  script.type = 'application/ld+json';
+  script.textContent = JSON.stringify(schema);
+  document.head.appendChild(script);
 };
 
 export default function MoviesTable() {
@@ -57,14 +109,17 @@ export default function MoviesTable() {
       try {
         setLoading(true);
         const response = await fetch(API_URL);
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         setMovies(data);
         setFilteredMovies(data);
+
+        // Add MovieList Schema to page
+        updateMovieListSchema(data);
         
         // Extract platforms and count their frequency
         const platformFrequency = new Map();
@@ -111,30 +166,39 @@ export default function MoviesTable() {
   // Filter movies based on search term and selected platform
   useEffect(() => {
     let result = movies;
-    
+
     // Filter by search term
     if (searchTerm) {
       const lowercasedSearch = searchTerm.toLowerCase();
-      result = result.filter(movie => 
+      result = result.filter(movie =>
         movie.name && movie.name.toLowerCase().includes(lowercasedSearch)
       );
     }
-    
+
     // Filter by platform
     if (selectedPlatform !== "All") {
       result = result.filter(movie => {
         if (!movie.platform) return false;
-        
+
         // Split the movie's platform string and check if any match the selected platform
         const moviePlatforms = movie.platform
           .split(/,|\s&\s|\sand\s/)
           .map(p => normalizePlatformName(p));
-          
+
         return moviePlatforms.some(p => p === selectedPlatform);
       });
     }
-    
+
     setFilteredMovies(result);
+
+    // Update meta tags based on filters
+    const metadata = getPageMetadata(
+      'home',
+      selectedPlatform,
+      searchTerm,
+      movies.length
+    );
+    updateMetaTags(metadata);
   }, [searchTerm, selectedPlatform, movies]);
 
   // Handle search input change
@@ -227,15 +291,15 @@ export default function MoviesTable() {
       
       {/* Table Container with fixed height and width */}
       <div className="table-container w-full">
-        <table className="min-w-full border-collapse border border-gray-300 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
+        <table className="min-w-full border-collapse border border-gray-300 dark:border-gray-600 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
           <caption className="sr-only">Telugu Movies OTT Release Dates</caption>
-          <thead className="bg-gray-800 text-white sticky top-0 z-10 w-full">
+          <thead className="bg-gray-800 dark:bg-gray-700 text-white sticky top-0 z-10 w-full">
             <tr>
-              <th scope="col" className="border border-gray-300 p-3 text-left w-1/4">Movie</th>
-              <th scope="col" className="border border-gray-300 p-3 text-left w-1/5">Platform</th>
-              <th scope="col" className="border border-gray-300 p-3 text-left w-1/5">Available On</th>
-              <th scope="col" className="border border-gray-300 p-3 text-left w-1/5">Type</th>
-              <th scope="col" className="border border-gray-300 p-3 text-left w-1/5">IMDb Rating</th>
+              <th scope="col" className="border border-gray-300 dark:border-gray-600 p-3 text-left w-1/4">Movie</th>
+              <th scope="col" className="border border-gray-300 dark:border-gray-600 p-3 text-left w-1/5">Platform</th>
+              <th scope="col" className="border border-gray-300 dark:border-gray-600 p-3 text-left w-1/5">Available On</th>
+              <th scope="col" className="border border-gray-300 dark:border-gray-600 p-3 text-left w-1/5">Type</th>
+              <th scope="col" className="border border-gray-300 dark:border-gray-600 p-3 text-left w-1/5">IMDb Rating</th>
             </tr>
           </thead>
           <tbody>
@@ -247,18 +311,18 @@ export default function MoviesTable() {
               </tr>
             ) : (
               filteredMovies.map((movie, index) => (
-                <tr 
-                  key={index} 
+                <tr
+                  key={index}
                   className={
-                    index % 2 === 0 
-                      ? 'bg-gray-50 dark:bg-gray-900 border border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors dark:text-gray-100' 
-                      : 'bg-white dark:bg-gray-800 border border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors dark:text-gray-100'
+                    index % 2 === 0
+                      ? 'bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors dark:text-gray-100'
+                      : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors dark:text-gray-100'
                   }
                 >
-                  <td className="p-3 border-r border-gray-300 w-1/4">{movie.name}</td>
-                  <td className="p-3 border-r border-gray-300 w-1/5">{movie.platform}</td>
-                  <td className="p-3 border-r border-gray-300 w-1/5">{movie.available_on}</td>
-                  <td className="p-3 border-r border-gray-300 w-1/5">{movie.type}</td>
+                  <td className="p-3 border-r border-gray-300 dark:border-gray-600 w-1/4">{movie.name}</td>
+                  <td className="p-3 border-r border-gray-300 dark:border-gray-600 w-1/5">{movie.platform}</td>
+                  <td className="p-3 border-r border-gray-300 dark:border-gray-600 w-1/5">{movie.available_on}</td>
+                  <td className="p-3 border-r border-gray-300 dark:border-gray-600 w-1/5">{movie.type}</td>
                   <td className="p-3 w-1/5">{movie.imdb_rating || "N/A"}</td>
                 </tr>
               ))
