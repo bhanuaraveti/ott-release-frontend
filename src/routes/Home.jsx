@@ -1,4 +1,6 @@
 import { lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
+import { Helmet } from '@dr.pogodin/react-helmet';
 import Seo from '../components/Seo';
 import AdSlot from '../components/AdSlot';
 
@@ -6,8 +8,18 @@ const MoviesTable = lazy(() => import('../MoviesTable'));
 
 const SITE = 'https://telugumoviesott.onrender.com';
 
+const PLATFORMS = [
+  { label: 'Netflix', slug: 'netflix' },
+  { label: 'Prime Video', slug: 'prime-video' },
+  { label: 'Disney+ Hotstar', slug: 'hotstar' },
+  { label: 'Aha', slug: 'aha' },
+  { label: 'Zee5', slug: 'zee5' },
+  { label: 'Sony LIV', slug: 'sonyliv' },
+  { label: 'Apple TV', slug: 'apple-tv' },
+];
+
 const LoadingFallback = () => (
-  <div className="flex items-center justify-center p-8">
+  <div className="flex items-center justify-center p-8 min-h-[600px]">
     <div className="w-8 h-8 rounded-full border-4 border-gray-300 border-t-blue-500 animate-spin"></div>
   </div>
 );
@@ -32,6 +44,16 @@ export default function Home() {
           },
         }}
       />
+      <Helmet>
+        {/* Preload the movies API so MoviesTable's fetch starts in parallel with the JS chunk
+            (homepage only — other routes don't need this 1MB payload). */}
+        <link
+          rel="preload"
+          as="fetch"
+          href="https://ott-release-backend.onrender.com/movies"
+          crossOrigin="anonymous"
+        />
+      </Helmet>
 
       {/* Hero Section */}
       <header className="z-10 w-full max-w-6xl mx-auto px-4 py-12 text-center">
@@ -72,10 +94,14 @@ export default function Home() {
       <section className="z-10 w-full max-w-6xl mx-auto px-4 mb-12">
         <h3 className="text-2xl md:text-3xl font-bold text-center mb-8">Popular OTT Platforms</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {['Netflix', 'Prime Video', 'Disney+ Hotstar', 'Aha', 'Zee5', 'Sony LIV', 'ETV Win', 'Sun NXT'].map(platform => (
-            <div key={platform} className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-lg shadow-md text-center hover:shadow-xl transition-shadow">
-              <p className="font-semibold">{platform}</p>
-            </div>
+          {PLATFORMS.map(({ label, slug }) => (
+            <Link
+              key={slug}
+              to={`/platform/${slug}`}
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-lg shadow-md text-center hover:shadow-xl hover:bg-blue-50 dark:hover:bg-gray-700 transition-all"
+            >
+              <p className="font-semibold">{label}</p>
+            </Link>
           ))}
         </div>
       </section>

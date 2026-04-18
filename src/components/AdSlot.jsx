@@ -10,6 +10,14 @@ const SLOT_IDS = {
   'blog-post': '9357544092',
 };
 
+const SLOT_MIN_HEIGHTS = {
+  'home-mid': 280,
+  'movie-detail': 280,
+  'platform-top': 250,
+  'platform-bottom': 250,
+  'blog-post': 280,
+};
+
 export default function AdSlot({
   slot,
   format = 'auto',
@@ -39,12 +47,19 @@ export default function AdSlot({
     return null;
   }
 
+  const minHeight = SLOT_MIN_HEIGHTS[slot] || 250;
+  const insStyle = style || { display: 'block', minHeight: `${minHeight}px` };
+
   return (
-    <div className={`ad-slot my-6 text-center ${className}`} data-ad-placement={slot}>
+    <div
+      className={`ad-slot my-6 text-center ${className}`}
+      data-ad-placement={slot}
+      style={{ minHeight: `${minHeight}px` }}
+    >
       <ins
         ref={insRef}
         className="adsbygoogle"
-        style={style || { display: 'block' }}
+        style={insStyle}
         data-ad-client={AD_CLIENT}
         data-ad-slot={adSlotId}
         data-ad-format={format}
