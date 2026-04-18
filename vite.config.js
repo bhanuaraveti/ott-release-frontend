@@ -146,9 +146,19 @@ export default defineConfig({
       renderer: '@prerenderer/renderer-puppeteer',
       rendererOptions: {
         renderAfterDocumentEvent: 'prerender-ready',
-        maxConcurrentRoutes: 4,
+        // 2 is the safe default on Render's 512MB build dyno. 4 works
+        // locally but thrashes under 1k+ routes on modest hardware, which
+        // can push individual routes past the 60s per-route ceiling.
+        maxConcurrentRoutes: 2,
         headless: true,
         timeout: 60000,
+        // Block third-party requests (AdSense, GA, TMDB image CDN) during
+        // prerender. We only need the rendered DOM in the snapshot — the
+        // real AdSense script runs at browser-load time on the live site.
+        // Without this, pagead2.googlesyndication.com fetches serialize
+        // through Chromium's network stack and can stall individual pages
+        // past the 60s per-route timeout on a cold Render build dyno.
+        skipThirdPartyRequests: true,
       },
     }),
   ],
