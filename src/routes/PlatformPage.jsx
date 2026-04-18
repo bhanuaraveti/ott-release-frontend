@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Seo from '../components/Seo';
 import AdSlot from '../components/AdSlot';
-import { getAllMoviesAsync, getAllMovies } from '../data/loader';
+import { getIndex, getIndexAsync } from '../data/loader';
 import { getPlatformBySlug, matchPlatformRecord } from '../content/platforms';
 import { formatReleaseDate } from '../utils/movieCopy';
 
@@ -60,7 +60,7 @@ function PlatformNotFound({ slug }) {
 export default function PlatformPage() {
   const { slug } = useParams();
   const platform = slug ? getPlatformBySlug(slug) : null;
-  const [records, setRecords] = useState(() => getAllMovies());
+  const [records, setRecords] = useState(() => getIndex());
   const [loaded, setLoaded] = useState(() => records.length > 0);
 
   useEffect(() => {
@@ -74,7 +74,7 @@ export default function PlatformPage() {
       dispatchPrerenderReady();
       return undefined;
     }
-    getAllMoviesAsync()
+    getIndexAsync()
       .then((all) => {
         if (cancelled) return;
         setRecords(all);

@@ -31,14 +31,50 @@ function emitMoviesJsonForPrerender() {
     enforce: 'pre',
     apply: 'build',
     generateBundle() {
-      const jsonPath = path.resolve(__dirname, 'public', 'data', 'movies.json');
-      if (!fs.existsSync(jsonPath)) return;
-      const source = fs.readFileSync(jsonPath, 'utf8');
-      this.emitFile({
-        type: 'asset',
-        fileName: 'data/movies.json',
-        source,
-      });
+      const dataDir = path.resolve(__dirname, 'public', 'data');
+
+      // Full movies.json — still used by sitemap generator + Node-side
+      // loader fallback. Not fetched at runtime anymore.
+      const fullPath = path.join(dataDir, 'movies.json');
+      if (fs.existsSync(fullPath)) {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'data/movies.json',
+          source: fs.readFileSync(fullPath, 'utf8'),
+        });
+      }
+
+      // Slim index — fetched by MoviesTable (home) and PlatformPage.
+      const indexPath = path.join(dataDir, 'movies-index.json');
+      if (fs.existsSync(indexPath)) {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'data/movies-index.json',
+          source: fs.readFileSync(indexPath, 'utf8'),
+        });
+      }
+
+      // Per-movie detail files — fetched by MovieDetail on navigation.
+      // Emit each one so the prerender express static server can serve
+      // them from `bundle` during headless-Chromium route snapshots.
+      const detailDir = path.join(dataDir, 'movies');
+      if (fs.existsSync(detailDir) && fs.statSync(detailDir).isDirectory()) {
+        const files = fs.readdirSync(detailDir);
+        let emitted = 0;
+        for (const file of files) {
+          if (!file.endsWith('.json')) continue;
+          this.emitFile({
+            type: 'asset',
+            fileName: `data/movies/${file}`,
+            source: fs.readFileSync(path.join(detailDir, file), 'utf8'),
+          });
+          emitted += 1;
+        }
+        if (emitted > 0) {
+          // eslint-disable-next-line no-console
+          console.log(`[vite.config] emitted ${emitted} per-movie detail files for prerender`);
+        }
+      }
     },
   };
 }
@@ -123,16 +159,6 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    // Gzip compression
-    compression({
-      algorithm: 'gzip',
-      exclude: [/\.(br)$/, /\.(gz)$/],
-    }),
-    // Brotli compression (better than gzip)
-    compression({
-      algorithm: 'brotliCompress',
-      exclude: [/\.(br)$/, /\.(gz)$/],
-    }),
     // Register movies.json as a rollup asset so the prerender express
     // server can serve it. Must come before the prerender plugin so the
     // asset lands in `bundle` by the time the wildcard handler runs.
@@ -160,6 +186,20 @@ export default defineConfig({
         // past the 60s per-route timeout on a cold Render build dyno.
         skipThirdPartyRequests: true,
       },
+    }),
+    // Compression runs AFTER prerender so the precompressed .gz / .br
+    // files contain the real prerendered HTML (with rendered movie rows,
+    // etc.) — not the empty SPA shell. Previously compression ran before
+    // prerender and the .br / .gz variants were the tiny pre-render
+    // shells, which Render would serve to any client sending
+    // `Accept-Encoding: br` — defeating the whole prerender pipeline.
+    compression({
+      algorithm: 'gzip',
+      exclude: [/\.(br)$/, /\.(gz)$/],
+    }),
+    compression({
+      algorithm: 'brotliCompress',
+      exclude: [/\.(br)$/, /\.(gz)$/],
     }),
   ],
 

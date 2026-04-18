@@ -25,7 +25,9 @@ function getPageKey(pathname) {
 
 // Routes that need to finish loading their own data before prerender can
 // snapshot — they dispatch `prerender-ready` themselves once data is in.
-const SELF_SIGNALS_READINESS = new Set(["movie", "platform"]);
+// "home" is in this set so MoviesTable can bake its rendered rows into
+// the homepage snapshot (critical for SEO and LCP).
+const SELF_SIGNALS_READINESS = new Set(["home", "movie", "platform"]);
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(false);

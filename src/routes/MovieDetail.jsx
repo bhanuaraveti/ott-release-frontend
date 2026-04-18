@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Seo from '../components/Seo';
 import AdSlot from '../components/AdSlot';
-import { getAllMoviesAsync, getMovieBySlug } from '../data/loader';
+import { getMovieDetail, getMovieDetailAsync } from '../data/loader';
 import {
   buildEditorialBlurb,
   buildMetaDescription,
@@ -158,12 +158,12 @@ function buildJsonLd(movie, description, canonical) {
 
 export default function MovieDetail() {
   const { slug } = useParams();
-  const [movie, setMovie] = useState(() => (slug ? getMovieBySlug(slug) : null));
+  const [movie, setMovie] = useState(() => (slug ? getMovieDetail(slug) : null));
   const [loaded, setLoaded] = useState(() => movie != null);
 
-  // Async path for browser hydration: the prerender snapshot already has
-  // the final DOM, but the SPA shell needs to fetch /data/movies.json
-  // client-side on first navigation.
+  // Async path for browser hydration. The prerender snapshot already has
+  // the final DOM; the SPA shell fetches /data/movies/<slug>.json on first
+  // navigation to populate state.
   useEffect(() => {
     let cancelled = false;
     if (!slug) {
@@ -175,11 +175,10 @@ export default function MovieDetail() {
       dispatchPrerenderReady();
       return undefined;
     }
-    getAllMoviesAsync()
-      .then((records) => {
+    getMovieDetailAsync(slug)
+      .then((record) => {
         if (cancelled) return;
-        const found = records.find((r) => r && r.slug === slug) || null;
-        setMovie(found);
+        setMovie(record);
         setLoaded(true);
         dispatchPrerenderReady();
       })

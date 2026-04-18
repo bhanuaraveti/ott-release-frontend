@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
+import { getIndexAsync } from "./data/loader";
 
-// Use environment variable for API URL, fallback to production URL
-const API_URL = import.meta.env.VITE_API_URL || "https://ott-release-backend.onrender.com/movies";
+function dispatchPrerenderReady() {
+  if (typeof document === "undefined") return;
+  setTimeout(() => {
+    requestAnimationFrame(() => {
+      document.dispatchEvent(new Event("prerender-ready"));
+    });
+  }, 50);
+}
 
 // Enhanced helper function to normalize platform names
 const normalizePlatformName = (name) => {
@@ -107,19 +114,13 @@ export default function MoviesTable() {
     const fetchMovies = async () => {
       try {
         setLoading(true);
-        const response = await fetch(API_URL);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = await getIndexAsync();
         setMovies(data);
         setFilteredMovies(data);
 
         // Add MovieList Schema to page
         updateMovieListSchema(data);
-        
+
         // Extract platforms and count their frequency
         const platformFrequency = new Map();
         platformFrequency.set("All", Infinity); // Ensure "All" stays at the top
@@ -156,6 +157,8 @@ export default function MoviesTable() {
         setError("Failed to load movies. Please try again later.");
       } finally {
         setLoading(false);
+        // Always fire — prerender must snapshot whether data arrived or not.
+        dispatchPrerenderReady();
       }
     };
 
