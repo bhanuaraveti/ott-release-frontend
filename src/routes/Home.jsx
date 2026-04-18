@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from '@dr.pogodin/react-helmet';
 import Seo from '../components/Seo';
 import AdSlot from '../components/AdSlot';
 
@@ -44,16 +43,6 @@ export default function Home() {
           },
         }}
       />
-      <Helmet>
-        {/* Preload the movies API so MoviesTable's fetch starts in parallel with the JS chunk
-            (homepage only — other routes don't need this 1MB payload). */}
-        <link
-          rel="preload"
-          as="fetch"
-          href="https://ott-release-backend.onrender.com/movies"
-          crossOrigin="anonymous"
-        />
-      </Helmet>
 
       {/* Hero Section */}
       <header className="z-10 w-full max-w-6xl mx-auto px-4 py-12 text-center">
