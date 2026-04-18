@@ -4,6 +4,10 @@ import { Routes, Route, Link, useLocation } from "react-router-dom";
 import Home from "./routes/Home";
 import About from "./routes/About";
 import Privacy from "./routes/Privacy";
+import MovieDetail from "./routes/MovieDetail";
+import PlatformPage from "./routes/PlatformPage";
+import BlogIndex from "./routes/BlogIndex";
+import BlogPost from "./routes/BlogPost";
 
 // Lazy-loaded decorative pieces
 const AnimatedBackground = lazy(() => import("./AnimatedBackground"));
@@ -12,8 +16,16 @@ const Breadcrumb = lazy(() => import("./Breadcrumb"));
 function getPageKey(pathname) {
   if (pathname.startsWith("/about")) return "about";
   if (pathname.startsWith("/privacy")) return "privacy";
+  if (pathname.startsWith("/movie/")) return "movie";
+  if (pathname.startsWith("/platform/")) return "platform";
+  if (pathname === "/blog" || pathname === "/blog/") return "blog-index";
+  if (pathname.startsWith("/blog/")) return "blog-post";
   return "home";
 }
+
+// Routes that need to finish loading their own data before prerender can
+// snapshot — they dispatch `prerender-ready` themselves once data is in.
+const SELF_SIGNALS_READINESS = new Set(["movie", "platform"]);
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -36,13 +48,18 @@ export default function App() {
 
   // Signal the prerenderer that the initial render + Helmet writes are done.
   // Defer via setTimeout so Helmet's side-effect writes flush first.
+  // Routes that load their own data (e.g. /movie/:slug) opt out and
+  // dispatch this event themselves once ready.
   useEffect(() => {
     if (typeof document === "undefined") return;
+    if (SELF_SIGNALS_READINESS.has(currentPage)) return;
     const t = setTimeout(() => {
-      document.dispatchEvent(new Event("prerender-ready"));
-    }, 0);
+      requestAnimationFrame(() => {
+        document.dispatchEvent(new Event("prerender-ready"));
+      });
+    }, 50);
     return () => clearTimeout(t);
-  }, []);
+  }, [currentPage]);
 
   return (
     <div
@@ -89,6 +106,10 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/movie/:slug" element={<MovieDetail />} />
+        <Route path="/platform/:slug" element={<PlatformPage />} />
+        <Route path="/blog" element={<BlogIndex />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
       </Routes>
 
       {/* Footer */}
@@ -103,6 +124,7 @@ export default function App() {
               <h4 className="font-bold text-lg mb-3">Quick Links</h4>
               <ul className="space-y-2 text-sm opacity-70">
                 <li><Link to="/" className="hover:opacity-100 transition-opacity">Home</Link></li>
+                <li><Link to="/blog" className="hover:opacity-100 transition-opacity">Blog</Link></li>
                 <li><Link to="/about" className="hover:opacity-100 transition-opacity">About</Link></li>
                 <li><Link to="/privacy" className="hover:opacity-100 transition-opacity">Privacy Policy</Link></li>
               </ul>

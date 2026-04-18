@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Generated at build time by scripts/fetch-data.mjs (prebuild).
+public/data/
+
 # Environment files (keep .env.production, ignore .env.development)
 .env.development.local
 .env.test.local

@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import Seo from '../components/Seo';
+import AdSlot from '../components/AdSlot';
 
 const MoviesTable = lazy(() => import('../MoviesTable'));
 
@@ -62,6 +63,10 @@ export default function Home() {
           <MoviesTable />
         </Suspense>
       </main>
+
+      <div className="z-10 w-full max-w-6xl mx-auto px-4">
+        <AdSlot slot="home-mid" />
+      </div>
 
       {/* Popular Platforms Section */}
       <section className="z-10 w-full max-w-6xl mx-auto px-4 mb-12">
