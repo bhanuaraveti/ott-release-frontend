@@ -8,9 +8,8 @@ import MovieDetail from "./routes/MovieDetail";
 import PlatformPage from "./routes/PlatformPage";
 import BlogIndex from "./routes/BlogIndex";
 import BlogPost from "./routes/BlogPost";
+import AnimatedBackground from "./AnimatedBackground";
 
-// Lazy-loaded decorative pieces
-const AnimatedBackground = lazy(() => import("./AnimatedBackground"));
 const Breadcrumb = lazy(() => import("./Breadcrumb"));
 
 function getPageKey(pathname) {
@@ -69,9 +68,7 @@ export default function App() {
         darkMode ? "dark bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-900"
       }`}
     >
-      <Suspense fallback={<div className="h-screen w-full bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800" />}>
-        <AnimatedBackground />
-      </Suspense>
+      <AnimatedBackground />
 
       {/* Navigation */}
       <nav className="z-10 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm sticky top-0">
