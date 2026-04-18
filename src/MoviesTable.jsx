@@ -1,5 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getIndexAsync } from "./data/loader";
+
+// Only render the first N rows on initial load. Keeps prerendered HTML
+// small (LCP/parse cost on mobile) while the full dataset is in memory
+// and reachable via search/filter or the "Show more" button.
+const INITIAL_ROW_COUNT = 50;
+const LOAD_MORE_STEP = 100;
 
 function dispatchPrerenderReady() {
   if (typeof document === "undefined") return;
@@ -109,6 +115,7 @@ export default function MoviesTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState("All");
   const [platforms, setPlatforms] = useState(["All"]);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_ROW_COUNT);
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -208,6 +215,25 @@ export default function MoviesTable() {
   const handleClearFilters = () => {
     setSearchTerm("");
     setSelectedPlatform("All");
+    setVisibleCount(INITIAL_ROW_COUNT);
+  };
+
+  // When a search or platform filter is active, users expect to see every
+  // match — hiding results behind "Show more" would make filtering feel
+  // broken. Otherwise truncate to visibleCount.
+  const isFiltering = searchTerm.trim() !== "" || selectedPlatform !== "All";
+  const displayedMovies = useMemo(
+    () => (isFiltering ? filteredMovies : filteredMovies.slice(0, visibleCount)),
+    [filteredMovies, isFiltering, visibleCount],
+  );
+  const hasMore = !isFiltering && filteredMovies.length > visibleCount;
+
+  const handleShowMore = () => {
+    setVisibleCount((n) => n + LOAD_MORE_STEP);
+  };
+
+  const handleShowAll = () => {
+    setVisibleCount(filteredMovies.length);
   };
 
   if (loading) {
@@ -296,16 +322,16 @@ export default function MoviesTable() {
             </tr>
           </thead>
           <tbody>
-            {filteredMovies.length === 0 ? (
+            {displayedMovies.length === 0 ? (
               <tr>
                 <td colSpan="5" className="p-4 text-center text-gray-500 dark:text-gray-300">
                   {movies.length === 0 ? "No data available" : "No movies match your search criteria"}
                 </td>
               </tr>
             ) : (
-              filteredMovies.map((movie, index) => (
+              displayedMovies.map((movie, index) => (
                 <tr
-                  key={index}
+                  key={movie.slug || index}
                   className={
                     index % 2 === 0
                       ? 'bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors dark:text-gray-100'
@@ -324,12 +350,31 @@ export default function MoviesTable() {
         </table>
       </div>
       
-      {/* Results summary */}
+      {/* Show-more controls and results summary */}
+      {hasMore && (
+        <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={handleShowMore}
+            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800"
+            aria-label={`Show ${LOAD_MORE_STEP} more movies`}
+          >
+            Show {LOAD_MORE_STEP} more
+          </button>
+          <button
+            onClick={handleShowAll}
+            className="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white font-medium rounded-lg transition-colors focus:ring-4 focus:outline-none focus:ring-gray-300 dark:focus:ring-gray-700"
+            aria-label={`Show all ${filteredMovies.length} movies`}
+          >
+            Show all {filteredMovies.length}
+          </button>
+        </div>
+      )}
+
       <div className="mt-4 text-sm text-gray-500 dark:text-gray-300 w-full">
-        {searchTerm || selectedPlatform !== "All" ? (
+        {isFiltering ? (
           <p>Showing {filteredMovies.length} of {movies.length} movies</p>
         ) : (
-          <p>Showing all {movies.length} movies</p>
+          <p>Showing {displayedMovies.length} of {movies.length} movies</p>
         )}
       </div>
     </div>
