@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { updateMetaTags, getPageMetadata } from "./utils/metaTags";
 
 // Use environment variable for API URL, fallback to production URL
 const API_URL = import.meta.env.VITE_API_URL || "https://ott-release-backend.onrender.com/movies";
@@ -190,15 +189,6 @@ export default function MoviesTable() {
     }
 
     setFilteredMovies(result);
-
-    // Update meta tags based on filters
-    const metadata = getPageMetadata(
-      'home',
-      selectedPlatform,
-      searchTerm,
-      movies.length
-    );
-    updateMetaTags(metadata);
   }, [searchTerm, selectedPlatform, movies]);
 
   // Handle search input change
