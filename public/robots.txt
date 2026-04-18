@@ -2,5 +2,4 @@
 User-agent: *
 Allow: /
 
-# Sitemap (served from backend with dynamic lastmod date)
-Sitemap: https://ott-release-backend.onrender.com/sitemap.xml
+Sitemap: https://telugumoviesott.onrender.com/sitemap.xml
