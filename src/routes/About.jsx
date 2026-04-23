@@ -40,8 +40,18 @@ export default function About() {
           </div>
           <div>
             <h3 className="text-xl font-semibold mb-3">Contact Us</h3>
+            <p className="opacity-80 mb-3">
+              Have questions, corrections, or suggestions? We want to hear from you — especially if you spot a missing release or incorrect streaming date.
+            </p>
             <p className="opacity-80">
-              Have questions or suggestions? We'd love to hear from you! Reach out to us and help us improve your experience.
+              Email:{' '}
+              {/* TODO: replace placeholder with the real contact address */}
+              <a
+                href="mailto:hello@telugumoviesott.com"
+                className="text-blue-600 hover:underline"
+              >
+                hello@telugumoviesott.com
+              </a>
             </p>
           </div>
         </div>

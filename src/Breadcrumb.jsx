@@ -1,47 +1,74 @@
-import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { Helmet } from '@dr.pogodin/react-helmet';
+import { getPlatformBySlug } from './content/platforms';
+import { getPostBySlug } from './content/blog';
 
-export default function Breadcrumb({ currentPage }) {
-  const baseUrl = 'https://telugumoviesott.onrender.com';
+const BASE_URL = 'https://telugumoviesott.onrender.com';
 
-  const getBreadcrumbItems = (page) => {
-    const items = [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": baseUrl,
-      },
-    ];
-    if (page === 'about') {
-      items.push({ "@type": "ListItem", "position": 2, "name": "About", "item": `${baseUrl}/about` });
-    } else if (page === 'privacy') {
-      items.push({ "@type": "ListItem", "position": 2, "name": "Privacy Policy", "item": `${baseUrl}/privacy` });
+function prettifySlug(slug) {
+  if (!slug) return '';
+  return slug
+    .split('-')
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+function computeTrail(pathname, routeParams) {
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length === 0) {
+    return [{ label: 'Home', to: '/' }];
+  }
+
+  const trail = [{ label: 'Home', to: '/' }];
+  const [root, param] = segments;
+
+  if (root === 'about') {
+    trail.push({ label: 'About', to: '/about' });
+  } else if (root === 'privacy') {
+    trail.push({ label: 'Privacy Policy', to: '/privacy' });
+  } else if (root === 'blog') {
+    trail.push({ label: 'Blog', to: '/blog' });
+    if (param) {
+      const post = getPostBySlug(param);
+      trail.push({
+        label: post?.frontmatter?.title || prettifySlug(param),
+        to: `/blog/${param}`,
+      });
     }
-    return items;
-  };
+  } else if (root === 'platform' && param) {
+    const platform = getPlatformBySlug(param);
+    trail.push({
+      label: platform?.name || prettifySlug(param),
+      to: `/platform/${param}`,
+    });
+  } else if (root === 'movie' && param) {
+    trail.push({
+      label: prettifySlug(param),
+      to: `/movie/${param}`,
+    });
+  }
+
+  return trail;
+}
+
+export default function Breadcrumb() {
+  const location = useLocation();
+  const params = useParams();
+  const trail = computeTrail(location.pathname, params);
 
   const breadcrumbList = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": getBreadcrumbItems(currentPage),
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.label,
+      item: `${BASE_URL}${item.to}`,
+    })),
   };
 
-  const paths = {
-    home: [{ label: 'Home', to: '/' }],
-    about: [
-      { label: 'Home', to: '/' },
-      { label: 'About', to: '/about' },
-    ],
-    privacy: [
-      { label: 'Home', to: '/' },
-      { label: 'Privacy Policy', to: '/privacy' },
-    ],
-  }[currentPage] || [{ label: 'Home', to: '/' }];
-
-  if (paths.length === 1) {
-    // Still emit breadcrumb schema on home, but no visible trail.
+  if (trail.length <= 1) {
     return (
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(breadcrumbList)}</script>
@@ -55,19 +82,30 @@ export default function Breadcrumb({ currentPage }) {
         <script type="application/ld+json">{JSON.stringify(breadcrumbList)}</script>
       </Helmet>
       <nav aria-label="Breadcrumb" className="z-10 w-full max-w-6xl mx-auto px-4 py-2">
-        <ol className="flex items-center space-x-2 text-sm opacity-70">
-          {paths.map((path, index) => (
-            <li key={path.to} className="flex items-center">
+        <ol className="flex items-center flex-wrap gap-y-1 text-sm opacity-70">
+          {trail.map((item, index) => (
+            <li key={item.to} className="flex items-center">
               {index > 0 && (
-                <svg className="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                <svg
+                  className="w-4 h-4 mx-2 shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               )}
-              {index === paths.length - 1 ? (
-                <span className="font-medium" aria-current="page">{path.label}</span>
+              {index === trail.length - 1 ? (
+                <span className="font-medium truncate max-w-[200px] md:max-w-none" aria-current="page">
+                  {item.label}
+                </span>
               ) : (
-                <Link to={path.to} className="hover:underline hover:opacity-100 transition-opacity">
-                  {path.label}
+                <Link to={item.to} className="hover:underline hover:opacity-100 transition-opacity">
+                  {item.label}
                 </Link>
               )}
             </li>

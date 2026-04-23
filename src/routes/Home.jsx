@@ -31,7 +31,7 @@ export default function Home() {
       </Helmet>
       <Seo
         title="Latest Telugu Movies OTT Release Dates 2026 | Netflix, Prime Video, Hotstar & More"
-        description="Find the latest Telugu movies OTT release dates across Netflix, Amazon Prime Video, Disney+ Hotstar, Aha, Zee5 and other platforms. Updated daily with 800+ movies. Your complete guide to Telugu cinema streaming!"
+        description="Find the latest Telugu movies OTT release dates across Netflix, Amazon Prime Video, Disney+ Hotstar, Aha, Zee5 and other platforms. Updated daily with 1,000+ movies. Your complete guide to Telugu cinema streaming!"
         canonical={`${SITE}/`}
         jsonLd={{
           '@context': 'https://schema.org',
@@ -58,7 +58,7 @@ export default function Home() {
         <div className="flex flex-wrap justify-center gap-4 mt-8">
           <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-6 py-3 rounded-lg shadow-md">
             <p className="text-sm opacity-70">Total Movies</p>
-            <p className="text-2xl font-bold">800+</p>
+            <p className="text-2xl font-bold">1,000+</p>
           </div>
           <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-6 py-3 rounded-lg shadow-md">
             <p className="text-sm opacity-70">OTT Platforms</p>
@@ -106,7 +106,7 @@ export default function Home() {
           </details>
           <details className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 rounded-lg shadow-md">
             <summary className="font-semibold cursor-pointer">Which OTT platforms are covered?</summary>
-            <p className="mt-3 opacity-80">We cover all major OTT platforms including Netflix, Amazon Prime Video, Disney+ Hotstar, Aha, Zee5, Sony LIV, ETV Win, and many more.</p>
+            <p className="mt-3 opacity-80">We cover all major OTT platforms including Netflix, Amazon Prime Video, Disney+ Hotstar, Aha, Zee5, Sony LIV, Apple TV, and more.</p>
           </details>
           <details className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 rounded-lg shadow-md">
             <summary className="font-semibold cursor-pointer">Can I search for specific movies?</summary>

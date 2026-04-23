@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 
 import Home from "./routes/Home";
@@ -9,8 +9,7 @@ import PlatformPage from "./routes/PlatformPage";
 import BlogIndex from "./routes/BlogIndex";
 import BlogPost from "./routes/BlogPost";
 import AnimatedBackground from "./AnimatedBackground";
-
-const Breadcrumb = lazy(() => import("./Breadcrumb"));
+import Breadcrumb from "./Breadcrumb";
 
 function getPageKey(pathname) {
   if (pathname.startsWith("/about")) return "about";
@@ -97,9 +96,7 @@ export default function App() {
       </nav>
 
       {/* Breadcrumb Navigation */}
-      <Suspense fallback={null}>
-        <Breadcrumb currentPage={currentPage} />
-      </Suspense>
+      <Breadcrumb />
 
       <Routes>
         <Route path="/" element={<Home />} />
