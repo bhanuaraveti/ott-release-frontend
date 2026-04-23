@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { Helmet } from '@dr.pogodin/react-helmet';
 import { Link } from 'react-router-dom';
 import Seo from '../components/Seo';
 import AdSlot from '../components/AdSlot';
@@ -26,6 +27,17 @@ const LoadingFallback = () => (
 export default function Home() {
   return (
     <>
+      {/* Preload the slim movie index so the fetch is in flight before
+          MoviesTable's lazy JS chunk finishes parsing. Cuts one RTT on
+          mobile where the chunk → fetch → render chain drives LCP. */}
+      <Helmet>
+        <link
+          rel="preload"
+          as="fetch"
+          href="/data/movies-index.json"
+          crossOrigin="anonymous"
+        />
+      </Helmet>
       <Seo
         title="Latest Telugu Movies OTT Release Dates 2026 | Netflix, Prime Video, Hotstar & More"
         description="Find the latest Telugu movies OTT release dates across Netflix, Amazon Prime Video, Disney+ Hotstar, Aha, Zee5 and other platforms. Updated daily with 800+ movies. Your complete guide to Telugu cinema streaming!"
