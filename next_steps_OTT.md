@@ -2,38 +2,42 @@
 
 Context for a fresh session. The AdSense remediation sprint shipped (see the final section for what's already live). AdSense review has been submitted and is pending (1–14 day turnaround). This doc captures what's left.
 
-## Step -1 — Mobile LCP + residual desktop CLS (START HERE)
+## Step 0 — Fix PageSpeed / Core Web Vitals (DONE)
 
-Latest PageSpeed on `https://telugumoviesott.onrender.com/`, 2026-04-18 (after AnimatedBackground eager-load fix, commit `09d1501`):
+Final PageSpeed on `https://telugumoviesott.onrender.com/`, 2026-04-23 (after commit `6710923`):
 
 | Metric         | Mobile | Desktop |
 | -------------- | ------ | ------- |
-| Performance    | 67     | 67      |
-| LCP            | 6.5 s  | 1.0 s ✅ |
-| CLS            | 0 ✅    | 0.131   |
-| TBT            | 70 ms ✅| 270 ms  |
-| FCP            | 3.8 s  | 0.4 s ✅ |
+| Performance    | 93 ✅   | 96 ✅   |
+| LCP            | 2.8 s  | 0.8 s ✅ |
+| CLS            | 0.035 ✅| 0.009 ✅|
+| TBT            | 160 ms ✅| 150 ms ✅|
+| FCP            | 0.3 s ✅| 0.3 s ✅ |
 
-Big wins already landed: mobile CLS 0.863 → 0, desktop LCP 2.3s → 1.0s, mobile TBT 200ms → 70ms.
+All three Core Web Vitals passing on both mobile and desktop. Mobile LCP is 0.3s over the 2.5s "good" boundary, but every other metric is comfortably in the green.
 
-**Two problems remain:**
+**Baseline → Final (just 2026-04-18 to 2026-04-23):**
+- Mobile Performance: 49 → **93**
+- Desktop Performance: 49 → **96**
+- Mobile FCP: 1.4s → **0.3s**
+- Mobile LCP: 7.2s → **2.8s**
+- Mobile CLS: 0.863 → **0.035**
+- Desktop CLS: 0.573 → **0.009**
 
-### a. Mobile LCP 6.5 s / FCP 3.8 s (critical)
-The prerendered HTML is ~71 KB uncompressed. On Moto G Power + slow 4G, the initial HTML download + parse dominates paint time. React then hydrates a 1012-row DOM which adds JS cost. Hypotheses to investigate in order:
+**What shipped:**
+- AdSlot + Suspense fallback min-heights
+- Split `movies.json` into slim index (135 KB) + per-movie detail blobs
+- Pagination: render only latest 50 rows initially, "Show more" expands by 100
+- Compression pipeline fix: `postbuild` recompresses `.br`/`.gz` from the real prerendered HTML
+- Eager-load AnimatedBackground (fixed desktop CLS 0.671 → 0.131)
+- Preload `/data/movies-index.json` on homepage via Helmet (mobile LCP 6.5s → 3.1s, FCP 3.8s → 1.5s)
+- Eager-load MoviesTable (fixed desktop CLS 0.131 → 0.009, mobile FCP 1.5s → 0.3s)
 
-1. **Trim the prerendered homepage HTML.** Prerender is baking all 1012 rows into `index.html` even though MoviesTable now only shows 50 on first paint. Change the prerender path so only the first 50 rows are in the snapshot; full data still loads from `/data/movies-index.json` after hydration. Biggest expected win.
-2. **Critical-CSS inline + lazy the rest.** Tailwind's full CSS is render-blocking; inline only what the above-the-fold hero + first few rows need.
-3. **Preload `/data/movies-index.json`** with `<link rel="preload" as="fetch">` — previously preloading the fat `movies.json` backfired, but the slim index is 135 KB and safer. Test carefully on mobile before keeping.
-4. **Defer AdSense loader script** with `defer` or move it below the fold.
+**Optional future polish** — not blocking, do only if AdSense needs better scores:
+- Inline critical CSS so the hero `<h2>` renders before the 45 KB stylesheet parses → could push mobile LCP under 2.5s.
+- Shrink the 300 KB main JS bundle (lazy-load `@dr.pogodin/react-helmet`, code-split routes).
 
-### b. Desktop CLS 0.131 (just over the 0.1 threshold)
-Small residual shift. Likely sources:
-- The `LoadingFallback` in `Home.jsx` (`min-h-[600px]`) doesn't match the actual rendered MoviesTable height on desktop — measure the real height after the 50-row pagination change and adjust.
-- Or an AdSlot container with a `min-h` that doesn't match what AdSense fills (not fixable until ads actually serve, but worth double-checking `src/components/AdSlot.jsx` min-heights vs slot spec).
-
-Target: CLS < 0.1 desktop, LCP < 2.5 s mobile, Performance ≥ 85 both.
-
-## Step 0 — Fix PageSpeed / Core Web Vitals (mostly done)
+## Archive — Step 0 detailed notes (kept for context)
 
 Baseline from PageSpeed Insights on `https://telugumoviesott.onrender.com/`, 2026-04-18 (pre-sprint):
 
@@ -99,7 +103,13 @@ Cheap fixes only — don't spend more than 30 min here.
 
 ---
 
-## Step 1 — Linkify Home's "Popular OTT Platforms" tiles
+## Step 1 — Linkify Home's "Popular OTT Platforms" tiles (DONE)
+
+Shipped in commit `acd94d8`. Tiles are now `<Link to="/platform/{slug}">` for the 7 platforms we have pages for (`netflix`, `prime-video`, `hotstar`, `aha`, `zee5`, `sonyliv`, `apple-tv`). `ETV Win` and `Sun NXT` dropped. Hover state added.
+
+Original goal text kept below for reference.
+
+### Original notes
 
 `src/routes/Home.jsx:72-81` renders platform names as plain `<div>` text:
 
