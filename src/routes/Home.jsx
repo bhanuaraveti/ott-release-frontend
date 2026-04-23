@@ -1,10 +1,8 @@
-import { lazy, Suspense } from 'react';
 import { Helmet } from '@dr.pogodin/react-helmet';
 import { Link } from 'react-router-dom';
 import Seo from '../components/Seo';
 import AdSlot from '../components/AdSlot';
-
-const MoviesTable = lazy(() => import('../MoviesTable'));
+import MoviesTable from '../MoviesTable';
 
 const SITE = 'https://telugumoviesott.onrender.com';
 
@@ -18,18 +16,11 @@ const PLATFORMS = [
   { label: 'Apple TV', slug: 'apple-tv' },
 ];
 
-const LoadingFallback = () => (
-  <div className="flex items-center justify-center p-8 min-h-[600px]">
-    <div className="w-8 h-8 rounded-full border-4 border-gray-300 border-t-blue-500 animate-spin"></div>
-  </div>
-);
-
 export default function Home() {
   return (
     <>
-      {/* Preload the slim movie index so the fetch is in flight before
-          MoviesTable's lazy JS chunk finishes parsing. Cuts one RTT on
-          mobile where the chunk → fetch → render chain drives LCP. */}
+      {/* Preload the slim movie index so the fetch is in flight while
+          the main JS chunk is still downloading. Cuts one RTT on mobile. */}
       <Helmet>
         <link
           rel="preload"
@@ -82,9 +73,7 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="z-10 w-full max-w-6xl mx-auto px-4 mb-12">
-        <Suspense fallback={<LoadingFallback />}>
-          <MoviesTable />
-        </Suspense>
+        <MoviesTable />
       </main>
 
       <div className="z-10 w-full max-w-6xl mx-auto px-4">
