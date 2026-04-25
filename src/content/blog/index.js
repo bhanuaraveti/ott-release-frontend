@@ -6,6 +6,7 @@ import hotstarTeluguWatchlist from './hotstar-telugu-watchlist.jsx';
 import zee5TeluguPicks from './zee5-telugu-picks.jsx';
 import sonylivTeluguGuide from './sonyliv-telugu-guide.jsx';
 import howWeTrackOttReleases from './how-we-track-ott-releases.jsx';
+import teluguOttRoundupApril15252026 from './telugu-ott-roundup-april-15-25-2026.jsx';
 
 const posts = [
   bestTeluguFilmsAha,
@@ -16,6 +17,7 @@ const posts = [
   zee5TeluguPicks,
   sonylivTeluguGuide,
   howWeTrackOttReleases,
+  teluguOttRoundupApril15252026,
 ];
 
 const bySlug = new Map(posts.map((p) => [p.frontmatter.slug, p]));

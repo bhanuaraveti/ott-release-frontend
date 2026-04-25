@@ -106,6 +106,7 @@ const BLOG_SLUGS = [
   'zee5-telugu-picks',
   'sonyliv-telugu-guide',
   'how-we-track-ott-releases',
+  'telugu-ott-roundup-april-15-25-2026',
 ];
 
 function computePrerenderRoutes() {
